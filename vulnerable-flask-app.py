@@ -1,3 +1,22 @@
+
+
+
+
+
+
+
+
+
+import json
+
+
+
+
+
+
+from flask import request, jsonify
+
+
 import re
 
 
@@ -205,11 +224,12 @@ def get_users():
     try:
         hostname = request.args.get('hostname')
         command = ["dig", hostname]
-        data = subprocess.check_output(command, shell=False)
+        data = subprocess.run(command, capture_output=True, check=True).stdout.decode()
         return data
     except Exception as e:
         data = f"{hostname} username didn't found"
         return data
+
 
 
 
@@ -232,13 +252,29 @@ app = Flask(__name__)
 
 
 @app.route("/run_command", methods=["POST"])
+import subprocess
+
+
+import subprocess
+from flask import request, jsonify
+
+
+import shlex
+import subprocess
+
 def run_command():
     command = request.json.get("command")
-    try:
-        data = subprocess.check_output(command, shell=True)
-        return data
-    except:
-        return jsonify(data="Command didn't run"), 200
+    if command and isinstance(command, str):
+        try:
+            data = subprocess.check_output(shlex.split(command))
+            return data
+        except Exception as e:
+            return jsonify(data=f"Command didn't run: {e}"), 200
+    else:
+        return jsonify(data="Invalid command"), 400
+
+
+
 
 
 @app.route("/read_file", methods=["GET"])
@@ -258,13 +294,42 @@ def read_file():
         return jsonify(data=f"Failed to read file '{file_path}': {e}"), 500
 
 
-
-
 @app.route("/read_file", methods=["POST"])
+from flask import Flask, request, jsonify
+import os
+
+
+app = Flask(__name__)
+
+
+@app.route("/read-file", methods=["POST"])
 import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+
+
+@app.route("/read_file", methods=["POST"])
+def read_file():
+    file_path = request.args.get("file_path")
+    if not file_path:
+        return jsonify(data="No file path provided"), 400
+
+    if not os.path.exists(file_path):
+        return jsonify(data=f"File path '{file_path}' does not exist"), 404
+
+    try:
+        with open(file_path, "r") as file:
+            data = file.read()
+            return data
+    except Exception as e:
+        return jsonify(data=f"Failed to read file '{file_path}': {e}"), 500
+
+
+if __name__ == "__main__":
+    app.run()
+
+
 
 
 def read_file():
@@ -302,19 +367,28 @@ import pickle
 import os
 
 
-def deserialization():
 import socket
-import pickle
+
 import os
 
 HOST = "0.0.0.0"
 PORT = 8001
 
-import socket
-import pickle
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((HOST, PORT))
+s.listen(1)
 
-HOST = "0.0.0.0"
-PORT = 8080
+conn, addr = s.accept()
+with conn:
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+        data_dict = json.loads(data.decode("utf-8"))
+        # Do something with the data
+        conn.sendall(json.dumps({"result": "Success"}).encode("utf-8"))
+s.close()
+
 
 def handle_client(conn, addr):
     with conn:
@@ -325,11 +399,111 @@ def handle_client(conn, addr):
         data = pickle.loads(data)
         response = str(data)
         conn.sendall(response.encode())
+import socket
+import subprocess
+
+HOST = "0.0.0.0"
+PORT = 8080
+
+ALLOWED_COMMANDS = ["ls", "cat", "pwd"]
+
+def handle_client(conn, addr):
+    conn.sendall(b"Welcome to the secure server!\n")
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+        command = data.decode()
+        if command in ALLOWED_COMMANDS:
+            output = subprocess.run(command, shell=True, stdout=subprocess.PIPE).stdout
+            conn.sendall(output)
+        else:
+import socket
+import subprocess
+
+HOST = "0.0.0.0"
+PORT = 8080
+
+commands = {
+    "ls": "ls -la",
+    "pwd": "pwd",
+    "whoami": "whoami",
+    "date": "date",
+    "time": "time",
+}
+
+
+def handle_client(conn, addr):
+    conn.sendall(b"Enter a command: ")
+    data = conn.recv(1024)
+    command = data.decode().strip()
+
+    if command in commands:
+        process = subprocess.run(commands[command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        conn.sendall(process.stdout)
+    else:
+import socket
+import shlex
+
+HOST = "0.0.0.0"
+PORT = 8080
+
+def handle_client(conn, addr):
+    data = conn.recv(1024)
+    command = data.decode()
+    args = shlex.split(command)
+
+    if args[0] == "GET":
+        file_path = args[1]
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+            conn.sendall(f"HTTP/1.1 200 OK\r\nContent-Length: {len(file_data)}\r\n\r\n{file_data}")
+    else:
+        conn.sendall(b"Invalid command. Please try again.\n")
+
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
     print(f"Listening on {HOST}:{PORT}")
+import socket
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(("0.0.0.0", 8080))
+s.listen(1)
+
+@app.route("/get_admin_mail/<string:control>")
+def get_admin_mail(control):
+    if control == "admin":
+        data = "admin@cybersecurity.intra"
+        import logging
+        logging.basicConfig(filename="restapi.log", filemode="w", level=logging.DEBUG)
+        logging.debug(data)
+        return jsonify(data=data), 200
+    else:
+        return jsonify(data="Control didn't set admin"), 200
+
+import socket
+
+import socket
+
+def handle_client(conn, addr):
+    with conn:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            print(f"Received {data.decode()}")
+            conn.send(b"Hello, world!")
+
+print("Waiting for connections...")
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("0.0.0.0", 8080))
+    s.listen(1)
     while True:
         conn, addr = s.accept()
         print(f"Connected by {addr}")
@@ -339,24 +513,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print(f"Error occurred: {e}")
         finally:
             conn.close()
+except KeyboardInterrupt:
+    s.close()
+    print("Server shut down")
 
 
 
-
-
-
-
-
-@app.route("/get_admin_mail/<string:control>")
-def get_admin_mail(control):
-    if control=="admin":
-        data="admin@cybersecurity.intra"
-        import logging
-        logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-        logging.debug(data)
-        return jsonify(data=data),200
-    else:
-        return jsonify(data="Control didn't set admin"), 200
 
 @app.route("/run_file")
 def run_file():
@@ -425,23 +587,35 @@ def route():
 
 
 @app.route('/logs')
-def ImproperOutputNeutralizationforLogs():
+def logs():
+    content_type = request.args.get("Content-Type")
+    response = Response()
+    response.headers["Content-Type"] = content_type
+    return response
+
+
+@app.route("/user_pass_control")
+def user_pass_control():
     data = request.args.get('data')
-    import logging
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
     logging.debug(data)
     return jsonify(data="Logging ok"), 200
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 
-@app.route("/user_pass_control")
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
 
 
 @app.route("/")
 def index():
     return "<h1>Hello, world!</h1>"
+
+
+@app.route("/login", methods=["POST"])
+import re
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
 
 
 @app.route("/login", methods=["POST"])
@@ -455,7 +629,8 @@ def login():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
+
 
 
 
