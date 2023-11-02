@@ -1,3 +1,19 @@
+
+
+
+
+from subprocess import check_output, CalledProcessError, STDOUT
+
+
+from subprocess import check_output, CalledProcessError
+
+from os import system
+
+
+
+from flask import Flask, render_template_string
+
+
 import re
 
 
@@ -167,6 +183,11 @@ if __name__ == '__main__':
 app = Flask(__name__)
 
 
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+@app.route('/')
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
@@ -180,6 +201,10 @@ def hello_ssti():
     else:
         return 'No name provided'
 
+if __name__ == '__main__':
+    app.run()
+
+
 
 @app.route("/hello_ssti", methods=['GET'])
 def hello_ssti_route():
@@ -187,23 +212,26 @@ def hello_ssti_route():
 
 
 @app.route("/get_users", methods=['GET'])
-def get_users():
-    p = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE)
-    users = p.stdout.decode().split('\n')
-    template = f'''\
+import subprocess
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    users = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE).stdout.decode().split('\n')
+    template = f"""
 <div>
 <h1>Users</h1>
 {users}
 </div>
-'''
+"""
     return render_template_string(template)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run()
 
-
-import subprocess
-from flask import request
 
 
 import subprocess
@@ -215,12 +243,14 @@ def get_users():
         hostname = request.args.get('hostname')
         command = ["dig", hostname]
         data = subprocess.run(
-            command, stdout=subprocess.PIPE, check=True
-        ).stdout.decode()
+            command, stdout=subprocess.PIPE, check=True,
+            encoding='utf-8', errors='strict'
+        ).stdout
         return data
     except subprocess.CalledProcessError as e:
         data = f"{hostname} username didn't found: {e}"
         return data
+
 
 
 
@@ -279,6 +309,12 @@ app = Flask(__name__)
 
 
 @app.route("/read_file", methods=["GET"])
+from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+@app.route("/read", methods=["POST"])
 def read_file():
     filename = request.args.get("filename")
     if not filename:
@@ -296,6 +332,7 @@ def read_file():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='127.0.0.1', port=port)
+
 
 
 
@@ -339,12 +376,74 @@ def deserialization():
 
 
 @app.route("/get_admin_mail/<string:control>")
-def get_admin_mail(control):
+from flask import Flask, jsonify
+
+
+app = Flask(__name__)
+
+@app.route("/admin_mail", methods=["GET"])
+from flask import Flask, jsonify, request
+
+
+app = Flask(__name__)
+
+
+@app.route("/get_admin_mail", methods=["GET"])
+import shlex
+from subprocess import check_output, CalledProcessError
+from flask import Flask, jsonify
+
+
+app = Flask(__name__)
+
+
+import os
+import shlex
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+from subprocess import check_output, CalledProcessError
+from flask import Flask, jsonify
+import shlex
+
+
+app = Flask(__name__)
+
+
+@app.route("/admin/mail", methods=["GET"])
+import os
+import shlex
+from subprocess import check_output, CalledProcessError, STDOUT
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/get_admin_mail", methods=["GET"])
+def get_admin_mail():
+    control = "admin"
+
     if control == "admin":
-        data = "admin@cybersecurity.intra"
-        return jsonify(data=data), 200
+        try:
+            data = check_output(shlex.split("whoami"), stderr=STDOUT)
+            return jsonify(data=data.decode("utf-8"))
+        except CalledProcessError as e:
+            return jsonify(data=f"Error while getting admin mail: {e}")
     else:
-        return jsonify(data="Control didn't set admin"), 200
+        return jsonify(data="Control didn't set admin")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+
+
+
 
 
 @app.route("/run_file")
@@ -423,15 +522,33 @@ def ImproperOutputNeutralizationforLogs():
 
 
 @app.route("/user_pass_control")
-from flask import Flask, request, jsonify
+def user_pass_control():
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        if username == 'test' and password == 'test':
+            return jsonify(message="Login successful"), 200
+        else:
+            return jsonify(message="Login failed"), 401
+    else:
+        return jsonify(message="Method not allowed"), 405
 
-app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Hello World!"
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
 
 @app.route("/user_pass_control", methods=["POST"])
 def user_pass_control():
     username = request.form.get("username")
     password = request.form.get("password")
-    if re.search(username, password):
+    if not re.search(username, password):
         return jsonify(data="Password include username"), 200
     else:
         return jsonify(data="Password doesn't include username"), 200
@@ -439,6 +556,7 @@ def user_pass_control():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
 
