@@ -1,3 +1,35 @@
+from flask import Response, request
+
+
+
+from flask import Flask, jsonify, request
+
+import os
+from flask import Flask, request, jsonify
+
+
+
+
+
+
+from flask import Flask, render_template_string, request
+
+import shlex
+
+
+
+
+
+
+
+from flask import Flask, jsonify, render_template
+
+import logging
+
+from flask import Flask, jsonify
+
+from flask import jsonify
+
 from flask import Flask,jsonify,render_template_string,request,Response,render_template
 import subprocess
 from werkzeug.datastructures import Headers
@@ -14,41 +46,122 @@ def main_page():
     return "REST API"
 
 @app.route("/user/<string:name>")
-def search_user(name):
+import sqlite3
+
+
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Hello, world!"
+
+@app.route("/search_user/<name>")
+import sqlite3
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/user/<username>")
+import sqlite3
+import logging
+
+
+app = Flask(__name__)
+
+@app.route("/search_user/<username>")
+def search_user(username):
     con = sqlite3.connect("test.db")
     cur = con.cursor()
-    cur.execute("select * from test where username = '%s'" % name)
-    data = str(cur.fetchall())
+    cur.execute("select * from test where username = ?", (username,))
+    data = cur.fetchall()
     con.close()
-    import logging
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
     logging.debug(data)
-    return jsonify(data=data),200
+    return jsonify(data=data), 200
+
+if __name__ == "__main__":
+    app.run()
+
+
+
+
 
 
 @app.route("/welcome/<string:name>")
-def welcome(name):
-    data="Welcome "+name
-    return jsonify(data=data),200
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/welcome/<string:name>")
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route('/')
+from flask import Flask, jsonify, render_template
+
+app = Flask(__name__)
+
+
+@app.route('/')
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+def welcome():
+    name = "John Doe"
+    data = {"message": f"Welcome {name}"}
+    return jsonify(data)
+
+
+if __name__ == '__main__':
+    app.run()
+
+
+
 
 @app.route("/welcome2/<string:name>")
+import subprocess
+
 def welcome2(name):
-    data="Welcome "+name
+    data = f"Welcome {shlex.escape(name)}"
     return data
 
+
+
+
+
 @app.route("/hello")
+app = Flask(__name__)
+
+
+@app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+
+@app.route('/')
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
-        template = f'''<div>
-        <h1>Hello</h1>
-        {name}
+        template = f"""
+<div>
+    <h1>Hello</h1>
+    {name}
 </div>
-'''
-        import logging
-        logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-        logging.debug(str(template))
+"""
         return render_template_string(template)
+
+
+if __name__ == '__main__':
+    app.run()
+
+
 
 @app.route("/get_users")
 def get_users():
@@ -61,26 +174,62 @@ def get_users():
         data = str(hostname) + " username didn't found"
         return data
 
+
 @app.route("/get_log/")
 def get_log():
+    return jsonify({"data": get_users()})
+
+
+def get_log():
+    command = "cat restapi.log"
     try:
-        command="cat restapi.log"
-        data=subprocess.check_output(command,shell=True)
+        data = subprocess.check_output(command, shell=True)
         return data
     except:
         return jsonify(data="Command didn't run"), 200
 
 
+
 @app.route("/read_file")
+app = Flask(__name__)
+
+@app.route('/read_file', methods=['POST'])
+import os
+
+
+app = Flask(__name__)
+
+@app.route("/read_file", methods=['GET'])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/read_file", methods=["GET"])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/read_file", methods=["POST"])
 def read_file():
-    filename = request.args.get('filename')
-    file = open(filename, "r")
-    data = file.read()
-    file.close()
-    import logging
-    logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(str(data))
-    return jsonify(data=data),200
+    filename = request.args.get("filename")
+    if not os.path.exists(filename):
+        return jsonify(error="File does not exist"), 404
+    with open(filename, "r") as file:
+        data = file.read()
+    return jsonify(data=data), 200
+
+
+if __name__ == "__main__":
+    app.run()
+
+
+
+
+
+
 
 @app.route("/deserialization/")
 def deserialization():
@@ -173,10 +322,9 @@ def login():
 def route():
     content_type = request.args.get("Content-Type")
     response = Response()
-    headers = Headers()
-    headers.add("Content-Type", content_type)
-    response.headers = headers
+    response.headers["Content-Type"] = content_type
     return response
+
 
 @app.route('/logs')
 def ImproperOutputNeutralizationforLogs():
