@@ -1,3 +1,26 @@
+
+
+
+from flask import Flask, request
+
+
+
+
+
+from flask import request, jsonify, make_response
+
+from flask import Flask, jsonify, request, make_response
+from flask_cors import CORS, cross_origin
+
+from flask import Flask, jsonify, send_from_directory
+
+
+
+
+from flask import request
+
+
+
 from flask import Response, request
 
 from flask import Flask, jsonify, request
@@ -147,16 +170,20 @@ app = Flask(__name__)
 
 
 @app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+
+@app.route('/')
 def hello_ssti():
-    if request.args.get('name'):
-        name = request.args.get('name')
-        template = f"""
+    name = request.args.get('name')
+    return render_template_string(f"""
 <div>
     <h1>Hello</h1>
     {name}
 </div>
-"""
-        return render_template_string(template)
+""")
 
 
 if __name__ == '__main__':
@@ -164,20 +191,52 @@ if __name__ == '__main__':
 
 
 
-@app.route("/get_users")
-def get_users():
-    try:
-        hostname = request.args.get('hostname')
-        command = "dig " + hostname
-        data = subprocess.check_output(command, shell=True)
-        return data
-    except:
-        data = str(hostname) + " username didn't found"
-        return data
 
-@app.route("/get_log/")
+@app.route("/get_users")
 import subprocess
 from flask import jsonify
+
+
+import subprocess
+
+
+import shlex
+import subprocess
+from flask import request
+
+
+import shlex
+import subprocess
+
+from flask import request
+
+
+def get_users():
+    try:
+        hostname = request.args.get("hostname")
+        command = ["dig", hostname]
+        process = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, check=True)
+        return process.stdout
+    except:
+        data = f"{hostname} username didn't found"
+        return data
+
+
+
+
+
+@app.route("/get_log/")
+def get_log():
+    data = get_users()
+    return jsonify(data.decode('utf-8'))
+
+
+
+import os
+import subprocess
+from flask import Flask, jsonify
+
+app = Flask(__name__)
 
 
 def get_log():
@@ -189,12 +248,28 @@ def get_log():
         return jsonify(data="Command didn't run: {}".format(e)), 200
 
 
-
 @app.route("/read_file")
-import logging
+import os
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None, template_folder=None)
+
+
+@app.route("/api/v1/logs/restapi.log")
+def read_file():
+    try:
+        file_path = os.path.join(os.path.dirname(__file__), "restapi.log")
+        with open(file_path, "r") as f:
+            data = f.read()
+        return jsonify(data=data)
+    except Exception as e:
+        return jsonify(data="File couldn't be read: {}".format(e)), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
 
 @app.route("/read_file", methods=['POST'])
 def read_file():
@@ -227,19 +302,52 @@ app = Flask(__name__)
 
 
 @app.route("/")
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/')
 def index():
-    return jsonify({"message": "Hello, World!"})
+    return jsonify({'message': 'Hello, World!'})
+
+@app.route('/deserialization', methods=['POST'])
+def deserialization():
+    data = request.get_json()
+    if data:
+        # Do something with the data
+        return jsonify({'message': 'Data received successfully.'}), 200
+    else:
+        return make_response(jsonify({'message': 'No data provided.'}), 400)
 
 
-@app.route("/deserialization", methods=["POST"])
+
+
+@app.route("/get_admin_mail/<control>")
+from flask import Flask, jsonify
 import socket
 import pickle
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route("/get_admin_mail/<control>")
-def deserialization():
+@app.route("/")
+def index():
+    return "Hello, world!"
+
+@app.route("/deserialize", methods=["POST"])
+import socket
+import pickle
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
+import socket
+import pickle
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
     try:
         HOST = "0.0.0.0"
         PORT = 8001
@@ -254,8 +362,39 @@ def deserialization():
     except Exception as e:
         return jsonify(data=str(e)), 500
 
+if __name__ == '__main__':
+    app.run()
+
+
+
+@app.route("/")
+import os
+
+
+app = Flask(__name__)
+
+
+@app.route("/")
+from flask import Flask, request
+import os
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def hello():
+    name = request.args.get("name", "World")
+    return f"Hello, {name}!"
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, port=port)
+
+
+
+
+
 
 def get_admin_mail(control):
     if control=="admin":
@@ -334,12 +473,21 @@ def route():
 
 
 @app.route('/logs')
-def ImproperOutputNeutralizationforLogs():
+import logging
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
     data = request.args.get('data')
-    import logging
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
     logging.debug(data)
     return jsonify(data="Logging ok"), 200
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
+
 
 
 @app.route("/user_pass_control")
