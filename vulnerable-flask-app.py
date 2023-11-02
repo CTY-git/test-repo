@@ -1,5 +1,19 @@
 
 
+
+
+
+
+from subprocess import check_output
+
+
+
+
+
+
+
+
+
 import logging
 
 
@@ -211,6 +225,11 @@ from flask import Flask, render_template_string, request
 app = Flask(__name__)
 
 @app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+@app.route('/')
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
@@ -226,6 +245,7 @@ def hello_ssti():
 
 if __name__ == '__main__':
     app.run()
+
 
 
 
@@ -248,6 +268,12 @@ import subprocess
 app = Flask(__name__)
 
 @app.route("/")
+from flask import Flask, render_template_string
+import subprocess
+
+app = Flask(__name__)
+
+
 def index():
     users = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE).stdout.decode().split('\n')
     template = f"""
@@ -258,19 +284,26 @@ def index():
 """
     return render_template_string(template)
 
+
+@app.route("/")
+def hello():
+    return index()
+
+
 if __name__ == "__main__":
     app.run()
 
 
 
-import subprocess
+import shlex
 from flask import request
+import subprocess
 
 
 def get_users():
     try:
         hostname = request.args.get('hostname')
-        command = ["dig", hostname]
+        command = ["dig", shlex.escape(hostname)]
         data = subprocess.run(
             command, stdout=subprocess.PIPE, check=True,
             encoding='utf-8', errors='strict'
@@ -279,6 +312,7 @@ def get_users():
     except subprocess.CalledProcessError as e:
         data = f"{hostname} username didn't found: {e}"
         return data
+
 
 
 
@@ -352,6 +386,13 @@ app = Flask(__name__)
 
 
 @app.route("/read-file", methods=["GET"])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/read_file", methods=["GET"])
 def read_file():
     filename = request.args.get("filename")
     if not filename:
@@ -369,6 +410,7 @@ def read_file():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="127.0.0.1", port=port)
+
 
 
 
@@ -527,13 +569,35 @@ app = Flask(__name__)
 
 
 @app.route("/")
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+import os
+import shlex
+
+
 def hello_world():
     return "Hello, World!"
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, port=port)
+
+
+
+
+
 
 
 
@@ -616,16 +680,27 @@ def route():
 
 
 @app.route('/logs')
-from flask import Flask, request, jsonify
+def logs():
+    content_type = request.args.get("Content-Type")
+    response = Response()
+    response.headers["Content-Type"] = content_type
+    return response
 
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def index():
     return "Hello, world!"
 
 @app.route('/log', methods=['POST'])
+import logging
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/log", methods=['POST'])
 def log():
     data = request.args.get('data')
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
@@ -633,16 +708,16 @@ def log():
     return jsonify(data="Logging ok"), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='127.0.0.1', port=5000)
 
 
-
-@app.route("/user_pass_control")
+@app.route("/login", methods=["POST"])
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/login", methods=["POST"])
+
+@app.route('/user-pass-control', methods=['POST'])
 def user_pass_control():
     if request.method == 'POST':
         data = request.get_json()
@@ -655,8 +730,10 @@ def user_pass_control():
     else:
         return jsonify(message="Method not allowed"), 405
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='127.0.0.1', port=5000)
+
 
 
 
@@ -677,17 +754,30 @@ app = Flask(__name__)
 
 
 @app.route("/user_pass_control", methods=["POST"])
+from flask import Flask, request, jsonify
+import re
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return "Hello, World!"
+
+
+@app.route("/user_pass_control", methods=["POST"])
 def user_pass_control():
     username = request.form.get("username")
     password = request.form.get("password")
     if not re.search(username, password):
-        return jsonify(data="Password include username"), 200
+        return jsonify(data="Password does not contain username"), 200
     else:
-        return jsonify(data="Password doesn't include username"), 200
+        return jsonify(data="Password contains username"), 200
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=5000)
+    app.run(host="0.0.0.0", port=5000)
+
 
 
 
