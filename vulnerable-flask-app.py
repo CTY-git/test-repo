@@ -1,5 +1,23 @@
 
 
+import logging
+
+
+
+
+
+from dotenv import load_dotenv
+
+from os import getenv
+
+from subprocess import check_output, STDOUT, CalledProcessError
+
+
+
+
+
+
+
 
 
 from subprocess import check_output, CalledProcessError, STDOUT
@@ -188,6 +206,11 @@ from flask import Flask, render_template_string, request
 app = Flask(__name__)
 
 @app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+@app.route('/')
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
@@ -206,6 +229,7 @@ if __name__ == '__main__':
 
 
 
+
 @app.route("/hello_ssti", methods=['GET'])
 def hello_ssti_route():
     return hello_ssti()
@@ -218,6 +242,12 @@ app = Flask(__name__)
 
 
 @app.route("/")
+from flask import Flask, render_template_string
+import subprocess
+
+app = Flask(__name__)
+
+@app.route("/")
 def index():
     users = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE).stdout.decode().split('\n')
     template = f"""
@@ -227,7 +257,6 @@ def index():
 </div>
 """
     return render_template_string(template)
-
 
 if __name__ == "__main__":
     app.run()
@@ -250,6 +279,7 @@ def get_users():
     except subprocess.CalledProcessError as e:
         data = f"{hostname} username didn't found: {e}"
         return data
+
 
 
 
@@ -315,6 +345,13 @@ import os
 app = Flask(__name__)
 
 @app.route("/read", methods=["POST"])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/read-file", methods=["GET"])
 def read_file():
     filename = request.args.get("filename")
     if not filename:
@@ -329,9 +366,10 @@ def read_file():
         return jsonify({"error": str(e)}), 500
 
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="127.0.0.1", port=port)
+
 
 
 
@@ -423,6 +461,13 @@ app = Flask(__name__)
 
 
 @app.route("/get_admin_mail", methods=["GET"])
+import shlex
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+
 def get_admin_mail():
     control = "admin"
 
@@ -436,8 +481,66 @@ def get_admin_mail():
         return jsonify(data="Control didn't set admin")
 
 
+@app.route("/")
+from flask import Flask
+
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return get_admin_mail()
+
+import os
+from flask import Flask
+
+
+load_dotenv()
+
+app = Flask(__name__)
+
+
+@app.route("/")
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def hello_world():
+    return "Hello, World!"
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, port=port)
+
+
+
+
+
+
+
 
 
 
@@ -513,15 +616,33 @@ def route():
 
 
 @app.route('/logs')
-def ImproperOutputNeutralizationforLogs():
+from flask import Flask, request, jsonify
+
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "Hello, world!"
+
+@app.route('/log', methods=['POST'])
+def log():
     data = request.args.get('data')
-    import logging
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
     logging.debug(data)
     return jsonify(data="Logging ok"), 200
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+
 
 @app.route("/user_pass_control")
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/login", methods=["POST"])
 def user_pass_control():
     if request.method == 'POST':
         data = request.get_json()
@@ -534,6 +655,10 @@ def user_pass_control():
     else:
         return jsonify(message="Method not allowed"), 405
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+
 
 @app.route("/")
 def index():
@@ -542,6 +667,13 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+
+@app.route("/user_pass_control", methods=["POST"])
+from flask import Flask, request, jsonify
+import re
+
+app = Flask(__name__)
 
 
 @app.route("/user_pass_control", methods=["POST"])
@@ -555,7 +687,8 @@ def user_pass_control():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="localhost", port=5000)
+
 
 
 
