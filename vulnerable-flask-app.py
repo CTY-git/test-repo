@@ -1,3 +1,25 @@
+import re
+
+
+
+
+
+import socket
+import pickle
+from subprocess import check_output
+
+import socket, pickle
+
+
+
+
+
+
+from flask import request
+
+
+
+
 from flask import Response, request
 
 
@@ -146,16 +168,20 @@ app = Flask(__name__)
 
 
 @app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+
+@app.route('/')
 def hello_ssti():
-    if request.args.get('name'):
-        name = request.args.get('name')
-        template = f"""
+    name = request.args.get('name')
+    return render_template_string(f"""
 <div>
     <h1>Hello</h1>
     {name}
 </div>
-"""
-        return render_template_string(template)
+""")
 
 
 if __name__ == '__main__':
@@ -163,16 +189,31 @@ if __name__ == '__main__':
 
 
 
+
 @app.route("/get_users")
+import subprocess
+
+import subprocess
+
+
+
+import subprocess
+from flask import request
+
+
 def get_users():
     try:
         hostname = request.args.get('hostname')
-        command = "dig " + hostname
-        data = subprocess.check_output(command, shell=True)
+        command = ["dig", hostname]
+        data = subprocess.check_output(command, shell=False)
         return data
-    except:
-        data = str(hostname) + " username didn't found"
+    except Exception as e:
+        data = f"{hostname} username didn't found"
         return data
+
+
+
+
 
 
 @app.route("/get_log/")
@@ -183,36 +224,49 @@ def get_log():
 def get_log():
     command = "cat restapi.log"
     try:
+import os
+import subprocess
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/run_command", methods=["POST"])
+def run_command():
+    command = request.json.get("command")
+    try:
         data = subprocess.check_output(command, shell=True)
         return data
     except:
         return jsonify(data="Command didn't run"), 200
 
 
-
-@app.route("/read_file")
-app = Flask(__name__)
-
-@app.route('/read_file', methods=['POST'])
-import os
-
-
-app = Flask(__name__)
-
-@app.route("/read_file", methods=['GET'])
-import os
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
 @app.route("/read_file", methods=["GET"])
-import os
-from flask import Flask, request, jsonify
+def read_file():
+    file_path = request.args.get("file_path")
+    if not file_path:
+        return jsonify(data="No file path provided"), 400
 
-app = Flask(__name__)
+    if not os.path.exists(file_path):
+        return jsonify(data=f"File path '{file_path}' does not exist"), 404
+
+    try:
+        with open(file_path, "r") as file:
+            data = file.read()
+            return data
+    except Exception as e:
+        return jsonify(data=f"Failed to read file '{file_path}': {e}"), 500
+
+
 
 
 @app.route("/read_file", methods=["POST"])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
 def read_file():
     filename = request.args.get("filename")
     if not os.path.exists(filename):
@@ -220,6 +274,11 @@ def read_file():
     with open(filename, "r") as file:
         data = file.read()
     return jsonify(data=data), 200
+
+
+@app.route("/read_file", methods=["GET"])
+def read_file():
+    return read_file()
 
 
 if __name__ == "__main__":
@@ -231,22 +290,61 @@ if __name__ == "__main__":
 
 
 
+
+
 @app.route("/deserialization/")
+import socket
+import pickle
+import shlex
+
+import socket
+import pickle
+import os
+
+
 def deserialization():
-    try:
-        import socket, pickle
-        HOST = "0.0.0.0"
-        PORT = 8001
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((HOST, PORT))
-            s.listen()
-            connection, address = s.accept()
-            with connection:
-                received_data = connection.recv(1024)
-                data=pickle.loads(received_data)
-                return str(data)
-    except:
-        return jsonify(data="You must connect 8001 port"), 200
+import socket
+import pickle
+import os
+
+HOST = "0.0.0.0"
+PORT = 8001
+
+import socket
+import pickle
+
+HOST = "0.0.0.0"
+PORT = 8080
+
+def handle_client(conn, addr):
+    with conn:
+        print("Connected by", addr)
+        data = conn.recv(1024)
+        if not data:
+            return
+        data = pickle.loads(data)
+        response = str(data)
+        conn.sendall(response.encode())
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen()
+    print(f"Listening on {HOST}:{PORT}")
+    while True:
+        conn, addr = s.accept()
+        print(f"Connected by {addr}")
+        try:
+            handle_client(conn, addr)
+        except Exception as e:
+            print(f"Error occurred: {e}")
+        finally:
+            conn.close()
+
+
+
+
+
+
 
 
 @app.route("/get_admin_mail/<string:control>")
@@ -336,14 +434,29 @@ def ImproperOutputNeutralizationforLogs():
 
 
 @app.route("/user_pass_control")
-def user_pass_control():
-    import re
-    username=request.form.get("username")
-    password=request.form.get("password")
-    if re.search(username,password):
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return "<h1>Hello, world!</h1>"
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if re.search(username, password):
         return jsonify(data="Password include username"), 200
     else:
         return jsonify(data="Password doesn't include username"), 200
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0")
+
 
 
 
