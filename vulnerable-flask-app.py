@@ -1,3 +1,34 @@
+from flask import Flask, request
+
+
+
+def open_file(filename):
+    with open(filename, 'rb') as file_object:
+        file_content = file_object.read()
+
+    return file_content
+
+
+import os
+
+
+def get_file_path(file_name):
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(current_dir, file_name)
+    return file_path
+
+file_name = 'important_file.txt'
+file_path = get_file_path(file_name)
+with open(file_path, 'r') as file:
+    data = file.read()
+
+
+
+
+
+
+
+
 
 
 
@@ -230,6 +261,12 @@ from flask import Flask, render_template_string, request
 app = Flask(__name__)
 
 @app.route('/')
+from flask import Flask, render_template_string, request
+
+app = Flask(__name__)
+
+
+@app.route('/')
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
@@ -243,8 +280,10 @@ def hello_ssti():
     else:
         return 'No name provided'
 
+
 if __name__ == '__main__':
     app.run()
+
 
 
 
@@ -276,13 +315,16 @@ app = Flask(__name__)
 
 def index():
     users = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE).stdout.decode().split('\n')
-    template = f"""
+    template = Template(f"""
 <div>
 <h1>Users</h1>
-{users}
+{% for user in users %}
+{{ user }}
+{% endfor %}
 </div>
-"""
-    return render_template_string(template)
+""")
+    return template.render(users=users)
+
 
 
 @app.route("/")
@@ -300,6 +342,9 @@ from flask import request
 import subprocess
 
 
+import shlex
+import subprocess
+
 def get_users():
     try:
         hostname = request.args.get('hostname')
@@ -313,15 +358,10 @@ def get_users():
         data = f"{hostname} username didn't found: {e}"
         return data
 
-
-
-
-
-
-
-
-
 @app.route("/get_log/")
+def get_log():
+    return get_users()
+
 def get_log():
     try:
         command="cat restapi.log"
@@ -393,6 +433,13 @@ app = Flask(__name__)
 
 
 @app.route("/read_file", methods=["GET"])
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+@app.route("/read_file", methods=["GET"])
 def read_file():
     filename = request.args.get("filename")
     if not filename:
@@ -410,6 +457,7 @@ def read_file():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="127.0.0.1", port=port)
+
 
 
 
@@ -587,12 +635,23 @@ import os
 import shlex
 
 
+import os
+import shlex
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
 def hello_world():
     return "Hello, World!"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, port=port)
+
+
+
 
 
 
@@ -738,15 +797,6 @@ if __name__ == '__main__':
 
 
 @app.route("/")
-def index():
-    return "Hello World!"
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
-
-@app.route("/user_pass_control", methods=["POST"])
 from flask import Flask, request, jsonify
 import re
 
@@ -754,10 +804,23 @@ app = Flask(__name__)
 
 
 @app.route("/user_pass_control", methods=["POST"])
-from flask import Flask, request, jsonify
-import re
+def user_pass_control():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
 
-app = Flask(__name__)
+    if not re.match(r"^[\w.@+-]+$", username):
+        return jsonify({"error": "Invalid username"}), 400
+
+    if not re.match(r"^.{8,}$", password):
+        return jsonify({"error": "Invalid password"}), 400
+
+    return jsonify({"message": "Success"}), 200
+
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000)
+
 
 
 @app.route("/")
@@ -786,15 +849,23 @@ if __name__ == "__main__":
 
 
 @app.route('/upload', methods = ['GET','POST'])
-def uploadfile():
-   import os
-   if request.method == 'POST':
-      f = request.files['file']
-      filename=secure_filename(f.filename)
-      f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-      return 'File uploaded successfully'
-   else:
-      return '''
+from werkzeug.utils import secure_filename
+import os
+
+app = Flask(__name__)
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.route('/')
+def upload_file():
+    if request.method == 'POST':
+        f = request.files['file']
+        filename = secure_filename(f.filename)
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return 'File uploaded successfully'
+    else:
+        return '''
 <html>
    <body>
       <form  method = "POST"  enctype = "multipart/form-data">
@@ -803,11 +874,8 @@ def uploadfile():
       </form>   
    </body>
 </html>
-
-
-      '''
-
-
+'''
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",port=8081)
+    app.run(host='0.0.0.0', port=8081)
+
