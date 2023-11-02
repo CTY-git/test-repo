@@ -1,3 +1,22 @@
+import re
+
+
+
+import shlex
+
+
+
+
+import json
+import socket
+import pickle
+
+
+
+
+
+from flask import Flask, render_template_string, request
+
 from flask import Response, request
 
 
@@ -145,6 +164,9 @@ if __name__ == '__main__':
 
 
 @app.route("/hello")
+app = Flask(__name__)
+
+
 def hello_ssti():
     if request.args.get('name'):
         name = request.args.get('name')
@@ -159,23 +181,49 @@ def hello_ssti():
         return 'No name provided'
 
 
+@app.route("/hello_ssti", methods=['GET'])
+def hello_ssti_route():
+    return hello_ssti()
 
-@app.route("/get_users")
-import subprocess
+
+@app.route("/get_users", methods=['GET'])
+def get_users():
+    p = subprocess.run(["ls", "/home"], stdout=subprocess.PIPE)
+    users = p.stdout.decode().split('\n')
+    template = f'''\
+<div>
+<h1>Users</h1>
+{users}
+</div>
+'''
+    return render_template_string(template)
+
+if __name__ == '__main__':
+    app.run()
 
 
 import subprocess
 from flask import request
 
+
+import subprocess
+from flask import request
+
+
 def get_users():
     try:
         hostname = request.args.get('hostname')
-        command = "dig " + hostname
-        data = subprocess.check_output(command, shell=True)
+        command = ["dig", hostname]
+        data = subprocess.run(
+            command, stdout=subprocess.PIPE, check=True
+        ).stdout.decode()
         return data
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         data = f"{hostname} username didn't found: {e}"
         return data
+
+
+
 
 
 
@@ -224,6 +272,13 @@ app = Flask(__name__)
 
 
 @app.route("/read_file", methods=["POST"])
+from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+
+@app.route("/read_file", methods=["GET"])
 def read_file():
     filename = request.args.get("filename")
     if not filename:
@@ -240,7 +295,9 @@ def read_file():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='127.0.0.1', port=port)
+
+
 
 
 
@@ -248,9 +305,25 @@ if __name__ == '__main__':
 
 
 @app.route("/deserialization/")
+import socket
+import json
+
+import socket
+import json
+
+import socket
+import json
+
+
+
+import json
+import socket
+
+import socket
+import json
+
 def deserialization():
     try:
-        import socket, pickle
         HOST = "0.0.0.0"
         PORT = 8001
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -259,22 +332,20 @@ def deserialization():
             connection, address = s.accept()
             with connection:
                 received_data = connection.recv(1024)
-                data=pickle.loads(received_data)
-                return str(data)
+                data = json.loads(received_data.decode())
+                return data
     except:
-        return jsonify(data="You must connect 8001 port"), 200
+        return {"data": "You must connect 8001 port"}, 200
 
 
 @app.route("/get_admin_mail/<string:control>")
 def get_admin_mail(control):
-    if control=="admin":
-        data="admin@cybersecurity.intra"
-        import logging
-        logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-        logging.debug(data)
-        return jsonify(data=data),200
+    if control == "admin":
+        data = "admin@cybersecurity.intra"
+        return jsonify(data=data), 200
     else:
         return jsonify(data="Control didn't set admin"), 200
+
 
 @app.route("/run_file")
 def run_file():
@@ -352,14 +423,23 @@ def ImproperOutputNeutralizationforLogs():
 
 
 @app.route("/user_pass_control")
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/user_pass_control", methods=["POST"])
 def user_pass_control():
-    import re
-    username=request.form.get("username")
-    password=request.form.get("password")
-    if re.search(username,password):
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if re.search(username, password):
         return jsonify(data="Password include username"), 200
     else:
         return jsonify(data="Password doesn't include username"), 200
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
 
 
 
