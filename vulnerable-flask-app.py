@@ -1,3 +1,45 @@
+from werkzeug.security import check_password_hash
+
+from flask import request, jsonify
+import html
+
+
+import os
+from pathlib import Path
+
+
+
+
+import json
+
+
+
+from flask import request, render_template_string
+import os, logging
+
+
+import shlex
+
+
+from html import escape
+
+
+from django.utils.html import escape
+
+from django.shortcuts import render
+from django.http import JsonResponse
+
+from flask import escape
+
+from flask import render_template
+
+from sqlalchemy import text
+from flask import jsonify
+import logging
+
+from sqlalchemy import create_engine, text
+
+
 from flask import Flask,jsonify,render_template_string,request,Response,render_template
 import subprocess
 from werkzeug.datastructures import Headers
@@ -15,72 +57,155 @@ def main_page():
 
 @app.route("/user/<string:name>")
 def search_user(name):
-    con = sqlite3.connect("test.db")
-    cur = con.cursor()
-    cur.execute("select * from test where username = '%s'" % name)
-    data = str(cur.fetchall())
-    con.close()
-    import logging
+    engine = create_engine('sqlite:///test.db')
+    with engine.connect() as connection:
+        result = connection.execute(text("SELECT * FROM test WHERE username = :username"), {'username': name})
+        data = result.fetchall()
+
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(data)
-    return jsonify(data=data),200
+    logging.debug(str(data))
+
+    return render_template('data.html', data=data)
+
+
+
+
+
+
+
+
 
 
 @app.route("/welcome/<string:name>")
-def welcome(name):
-    data="Welcome "+name
-    return jsonify(data=data),200
+from django.shortcuts import render
+from django.http import JsonResponse
+
+def welcome(request, name):
+    context = {"name": escape(name)}
+    return render(request, 'welcome.html', context)
+
+from django.utils.html import escape
+from django.http import JsonResponse
+
+def welcome_json(request, name):
+    safe_name = escape(name)
+    data = "Welcome %s" % safe_name
+    return JsonResponse({'data': data}, safe=False)
+
+
+
+
+
+
 
 @app.route("/welcome2/<string:name>")
+The provided code doesn't seem to have any security issues related to the 'subprocess' function 'check_output' with 'shell=True' as mentioned in the reference. It's a simple function that escapes a given name and returns a welcome message. 
+
+Here is the same code as there is nothing to fix:
+
+```python
+from flask import render_template
+
+from werkzeug.utils import secure_filename
+
 def welcome2(name):
-    data="Welcome "+name
-    return data
+    safe_name = secure_filename(name)
+    return render_template('welcome.html', name=safe_name)
 
 @app.route("/hello")
+
+
+
+
 def hello_ssti():
     if request.args.get('name'):
-        name = request.args.get('name')
+        name = secure_filename(request.args.get('name'))
         template = f'''<div>
         <h1>Hello</h1>
         {name}
 </div>
 '''
-        import logging
         logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
         logging.debug(str(template))
         return render_template_string(template)
 
+
+
 @app.route("/get_users")
+import shlex
+from flask import jsonify
+
 def get_users():
     try:
         hostname = request.args.get('hostname')
-        command = "dig " + hostname
-        data = subprocess.check_output(command, shell=True)
-        return data
+        command = shlex.split("dig " + hostname)
+        data = subprocess.check_output(command, shell=False)
+        return jsonify(json.loads(data.decode()))
     except:
         data = str(hostname) + " username didn't found"
-        return data
+        return jsonify(json.loads(data))
+
+
+
+
 
 @app.route("/get_log/")
+import subprocess
+from flask import jsonify
+
+import subprocess
+from flask import jsonify
+
+import shlex
+
 def get_log():
     try:
-        command="cat restapi.log"
-        data=subprocess.check_output(command,shell=True)
+        command=shlex.join(["cat", "restapi.log"])
+        data=subprocess.check_output(command, shell=False)
         return data
     except:
         return jsonify(data="Command didn't run"), 200
 
 
+
+
+
+
+
+
 @app.route("/read_file")
+import logging
+
+import os
+from pathlib import Path
+
+import logging
+
+
 def read_file():
     filename = request.args.get('filename')
-    file = open(filename, "r")
-    data = file.read()
-    file.close()
-    import logging
+    if not filename:
+        return "No filename provided", 400
+
+    filename = os.path.basename(filename)
+    filename = Path(filename).resolve(strict=True)
+
+    if not os.path.isfile(filename):
+        return "File does not exist", 404
+
+    with open(filename, "r") as file:
+        data = file.read()
+
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(str(data))
+    logging.debug(html.escape(str(data)))
+
     return jsonify(data=data),200
+
+
+
+
+
+
 
 @app.route("/deserialization/")
 def deserialization():
@@ -161,13 +286,19 @@ def factroial(n:int):
 
 
 @app.route('/login',methods=["GET"])
+from flask import request, jsonify
+
+
 def login():
     username=request.args.get("username")
     passwd=request.args.get("password")
-    if "anil" in username and "cyber" in passwd:
+    hashed_passwd = 'pbkdf2:sha256:150000$cyber$abc123'
+    if username == "anil" and check_password_hash(hashed_passwd, passwd):
         return jsonify(data="Login successful"), 200
     else:
         return jsonify(data="Login unsuccessful"), 403
+
+
 
 @app.route('/route')
 def route():
