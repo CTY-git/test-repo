@@ -1,13 +1,41 @@
-from flask import Flask,jsonify,render_template_string,request,Response,render_template
+import json
+from django.http import HttpRequest
+from django.shortcuts import render
+from django.utils.html import escape
+import logging
+import shlex
+import subprocess
+from flask import jsonify
+import shlex
+import sqlite3
+from flask import jsonify
+import logging
+import shlex
+import json
+from io import BytesIO
+import sqlite3
+import logging
+from flask import Flask, jsonify, render_template_string, request
+from django.utils.html import escape
+from django.shortcuts import render
+from django.http import HttpRequest
+from werkzeug.utils import secure_filename
+from pathlib import Path
+import os
 import subprocess
 from werkzeug.datastructures import Headers
-from werkzeug.utils import secure_filename
-import sqlite3
-
-
+import socket
+from io import BytesIO
+import pickle
+from flask import jsonify
+from flask import jsonify
+import shlex
+import socket, pickle
+from flask import jsonify
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER']="/home/kali/Desktop/upload"
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
+
 
 @app.route("/")
 def main_page():
@@ -17,19 +45,26 @@ def main_page():
 def search_user(name):
     con = sqlite3.connect("test.db")
     cur = con.cursor()
-    cur.execute("select * from test where username = '%s'" % name)
-    data = str(cur.fetchall())
+    safe_name = shlex.quote(name)
+    cur.execute("select * from test where username = ?", (safe_name,))
+    data = cur.fetchall()
     con.close()
-    import logging
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-    logging.debug(data)
-    return jsonify(data=data),200
+    logging.debug(str(data))
+    return jsonify(data), 200
+
+
+
+
+
 
 
 @app.route("/welcome/<string:name>")
 def welcome(name):
-    data="Welcome "+name
+    safe_name = shlex.quote(name)
+    data="Welcome "+safe_name
     return jsonify(data=data),200
+
 
 @app.route("/welcome2/<string:name>")
 def welcome2(name):
@@ -37,18 +72,19 @@ def welcome2(name):
     return data
 
 @app.route("/hello")
-def hello_ssti():
-    if request.args.get('name'):
-        name = request.args.get('name')
-        template = f'''<div>
-        <h1>Hello</h1>
-        {name}
-</div>
-'''
-        import logging
+def hello_ssti(request: HttpRequest):
+    if 'name' in request.GET:
+        name = escape(request.GET['name'])
+        context = {'name': name}
         logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
-        logging.debug(str(template))
-        return render_template_string(template)
+        logging.debug('Name: %s', escape(name))
+        return render(request, 'hello.html', context)
+
+
+
+
+
+
 
 @app.route("/get_users")
 def get_users():
@@ -64,28 +100,30 @@ def get_users():
 @app.route("/get_log/")
 def get_log():
     try:
-        command="cat restapi.log"
-        data=subprocess.check_output(command,shell=True)
+        command = shlex.escape("cat restapi.log")
+        data = subprocess.check_output(shlex.split(command), shell=False)
         return data
     except:
         return jsonify(data="Command didn't run"), 200
 
 
+
+
 @app.route("/read_file")
 def read_file():
     filename = request.args.get('filename')
-    file = open(filename, "r")
-    data = file.read()
-    file.close()
-    import logging
+    filename = secure_filename(filename)
+    file_path = os.path.abspath(filename)
+    with open(file_path, "r") as file:
+        data = file.read()
     logging.basicConfig(filename="restapi.log", filemode='w', level=logging.DEBUG)
     logging.debug(str(data))
     return jsonify(data=data),200
 
+
 @app.route("/deserialization/")
 def deserialization():
     try:
-        import socket, pickle
         HOST = "0.0.0.0"
         PORT = 8001
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -94,10 +132,13 @@ def deserialization():
             connection, address = s.accept()
             with connection:
                 received_data = connection.recv(1024)
-                data=pickle.loads(received_data)
+                buffer = BytesIO(received_data)
+                data = pickle.loads(buffer.read())
                 return str(data)
     except:
         return jsonify(data="You must connect 8001 port"), 200
+
+
 
 
 @app.route("/get_admin_mail/<string:control>")
@@ -115,11 +156,15 @@ def get_admin_mail(control):
 def run_file():
     try:
         filename=request.args.get("filename")
-        command="/bin/bash "+filename
+        filename = secure_filename(filename)
+        filename = Path(os.path.abspath(filename))
+        command="/bin/bash "+str(filename)
         data=subprocess.check_output(command,shell=True)
         return data
     except:
         return jsonify(data="File failed to run"), 200
+
+
 
 @app.route("/create_file")
 def create_file():
@@ -201,15 +246,17 @@ def user_pass_control():
 
 
 @app.route('/upload', methods = ['GET','POST'])
-def uploadfile():
-   import os
-   if request.method == 'POST':
-      f = request.files['file']
-      filename=secure_filename(f.filename)
-      f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-      return 'File uploaded successfully'
-   else:
-      return '''
+app = Flask(__name__)
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        f = request.files['file']
+        filename = secure_filename(f.filename)
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return 'File uploaded successfully'
+    else:
+        return '''
 <html>
    <body>
       <form  method = "POST"  enctype = "multipart/form-data">
@@ -218,11 +265,8 @@ def uploadfile():
       </form>   
    </body>
 </html>
-
-
-      '''
-
-
+        '''
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",port=8081)
+    app.run(debug=True)
+
