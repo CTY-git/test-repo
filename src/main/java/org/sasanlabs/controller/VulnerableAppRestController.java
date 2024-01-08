@@ -39,8 +39,45 @@ public class VulnerableAppRestController {
      * @throws JsonProcessingException
      */
     @GetMapping
-    @RequestMapping("/allEndPoint")
-    public String allEndPoints() throws JsonProcessingException {
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/allEndPoint")
+public class MyController {
+
+    // Define a safe method (e.g., GET)
+    @GetMapping
+    public String getInformation() {
+        // Logic for a safe, read-only operation
+        return "Information retrieved successfully";
+    }
+
+    // Define an unsafe method (e.g., POST)
+    @PostMapping
+    public String createResource() {
+        // Logic for creating a resource
+        return "Resource created successfully";
+    }
+
+    // Define another unsafe method (e.g., PUT)
+    @PutMapping
+    public String updateResource() {
+        // Logic for updating a resource
+        return "Resource updated successfully";
+    }
+
+    // Define another unsafe method (e.g., DELETE)
+    @DeleteMapping
+    public String deleteResource() {
+        // Logic for deleting a resource
+        return "Resource deleted successfully";
+    }
+}
         return "<pre>"
                 + JSONSerializationUtils.serializeWithPrettyPrintJSON(
                         getAllSupportedEndPoints.getSupportedEndPoints())
@@ -54,8 +91,7 @@ public class VulnerableAppRestController {
      * @throws JsonProcessingException
      */
     @GetMapping
-    @RequestMapping("/VulnerabilityDefinitions")
-    public List<VulnerabilityDefinition> getVulnerabilityDefinitions()
+@RequestMapping(path = "/VulnerabilityDefinitions", method = {RequestMethod.GET, RequestMethod.HEAD, RequestMethod.OPTIONS})
             throws JsonProcessingException {
         return getAllSupportedEndPoints.getVulnerabilityDefinitions();
     }
@@ -72,8 +108,19 @@ public class VulnerableAppRestController {
      * @throws JsonProcessingException
      */
     @GetMapping
-    @RequestMapping("/allEndPointJson")
-    public List<AllEndPointsResponseBean> allEndPointsJsonResponse()
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class WebController {
+
+    @RequestMapping(path = "/allEndPointJson", method = RequestMethod.GET)
+    public String getInformation() {
+        // Your code to handle the GET request
+        return "information";
+    }
+}
             throws JsonProcessingException {
         return getAllSupportedEndPoints.getSupportedEndPoints();
     }
@@ -87,8 +134,10 @@ public class VulnerableAppRestController {
      * @throws UnknownHostException
      */
     @GetMapping
-    @RequestMapping("/scanner")
-    public List<ScannerResponseBean> getScannerRelatedInformation()
+@GetMapping("/scanner")
+public ResponseEntity<?> getScannerData() {
+    // Your code to handle the GET request
+}
             throws JsonProcessingException, UnknownHostException {
         return getAllSupportedEndPoints.getScannerRelatedEndPointInformation();
     }
@@ -102,8 +151,7 @@ public class VulnerableAppRestController {
      * @throws UnknownHostException
      */
     @GetMapping
-    @RequestMapping("/scanner/metadata")
-    public ScannerMetaResponseBean getScannerRelatedMetaInformation() {
+@RequestMapping(path = "/scanner/metadata", method = RequestMethod.GET)
         return new ScannerMetaResponseBean(
                 Arrays.asList(VulnerabilityType.values()),
                 Arrays.asList(RequestParameterLocation.values()));
@@ -118,8 +166,20 @@ public class VulnerableAppRestController {
      * @throws JsonProcessingException
      * @throws UnknownHostException
      */
-    @RequestMapping("/sitemap.xml")
-    public String sitemapForPassiveScanners() throws JsonProcessingException, UnknownHostException {
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
+
+@Controller
+public class SitemapController {
+
+    @GetMapping("/sitemap.xml")
+    public ResponseEntity<String> getSitemap() {
+        // Your logic to generate or retrieve the sitemap
+        String sitemapContent = "..."; // Replace with actual sitemap content
+        return ResponseEntity.ok(sitemapContent);
+    }
+}
         List<AllEndPointsResponseBean> allEndPoints = allEndPointsJsonResponse();
         StringBuilder xmlBuilder =
                 new StringBuilder(
