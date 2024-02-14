@@ -305,7 +305,7 @@ function _addingEventListenerToShowHideHelpButton(vulnerableAppEndPointData) {
         "</li>";
     }
     helpText = helpText + "</ol>";
-    document.getElementById("helpText").innerHTML = helpText;
+    document.getElementById("helpText").textContent = helpText;
     document.getElementById("hideHelp").disabled = false;
   });
 
