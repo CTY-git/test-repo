@@ -13,5 +13,6 @@ function addingEventListenerToLoadImageButton() {
 addingEventListenerToLoadImageButton();
 
 function appendResponseCallback(data) {
-  document.getElementById("image").innerHTML = data;
+  // Assuming data is intended to be plain text and not HTML
+  document.getElementById("image").textContent = data;
 }

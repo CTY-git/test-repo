@@ -3,7 +3,7 @@ function addingEventListenerToLoadImageButton() {
     let url = getUrlForVulnerabilityLevel();
     doGetAjaxCall(
       appendResponseCallback,
-      url + "?fileName=" + document.getElementById("fileName").value,
+      url + "?fileName=" + encodeURIComponent(document.getElementById("fileName").value),
       true
     );
   });
@@ -16,24 +16,33 @@ function appendResponseCallback(data) {
     let content = JSON.parse(data.content);
     if (content.length > 0) {
       for (let key in content[0]) {
-        tableInformation =
-          tableInformation + '<th id="InfoColumn">' + key + "</th>";
+        tableInformation +=
+          '<th id="InfoColumn">' + escapeHTML(key) + "</th>";
       }
     }
     for (let index in content) {
-      tableInformation = tableInformation + '<tr id="Info">';
+      tableInformation += '<tr id="Info">';
       for (let key in content[index]) {
-        tableInformation =
-          tableInformation +
+        tableInformation +=
           '<td id="InfoColumn">' +
-          content[index][key] +
+          escapeHTML(content[index][key]) +
           "</td>";
       }
-      tableInformation = tableInformation + "</tr>";
+      tableInformation += "</tr>";
     }
-    tableInformation = tableInformation + "</table>";
-    document.getElementById("Information").innerHTML = tableInformation;
+    tableInformation += "</table>";
+    document.getElementById("Information").textContent = ''; // Clear the element
+    document.getElementById("Information").insertAdjacentHTML('beforeend', tableInformation);
   } else {
-    document.getElementById("Information").innerHTML = "Unable to Load Users";
+    document.getElementById("Information").textContent = "Unable to Load Users";
   }
+}
+
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
