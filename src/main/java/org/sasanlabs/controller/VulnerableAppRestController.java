@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.SessionAttribute;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 /** @author KSASAN preetkaran20@gmail.com */
 @RestController
@@ -53,11 +56,17 @@ public class VulnerableAppRestController {
      * @return
      * @throws JsonProcessingException
      */
+
     @GetMapping
     @RequestMapping("/VulnerabilityDefinitions")
-    public List<VulnerabilityDefinition> getVulnerabilityDefinitions()
+    public List<VulnerabilityDefinition> getVulnerabilityDefinitions(@ModelAttribute("csrfToken") CsrfToken csrfToken)
             throws JsonProcessingException {
         return getAllSupportedEndPoints.getVulnerabilityDefinitions();
+    }
+
+    @ModelAttribute("csrfToken")
+    public CsrfToken csrfToken(HttpServletRequest request) {
+        return (CsrfToken) request.getAttribute(CsrfToken.class.getName());
     }
 
     /**
@@ -86,10 +95,13 @@ public class VulnerableAppRestController {
      * @throws JsonProcessingException
      * @throws UnknownHostException
      */
+    
     @GetMapping
     @RequestMapping("/scanner")
-    public List<ScannerResponseBean> getScannerRelatedInformation()
+    public List<ScannerResponseBean> getScannerRelatedInformation(
+            @SessionAttribute("org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository.CSRF_TOKEN") CsrfToken csrfToken)
             throws JsonProcessingException, UnknownHostException {
+        // Verify the CSRF token or it can be automatically verified by Spring Security if properly configured
         return getAllSupportedEndPoints.getScannerRelatedEndPointInformation();
     }
 
