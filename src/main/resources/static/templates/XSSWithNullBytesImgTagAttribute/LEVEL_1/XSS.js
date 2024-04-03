@@ -3,7 +3,7 @@ function addingEventListenerToLoadImageButton() {
     let url = getUrlForVulnerabilityLevel();
     doGetAjaxCall(
       appendResponseCallback,
-      url + "?value=images/" + document.getElementById("images").value,
+      url + "?value=images/" + encodeURIComponent(document.getElementById("images").value),
       false
     );
   });
@@ -11,5 +11,8 @@ function addingEventListenerToLoadImageButton() {
 addingEventListenerToLoadImageButton();
 
 function appendResponseCallback(data) {
-  document.getElementById("image").innerHTML = data;
+  let div = document.getElementById("image");
+  div.textContent = ''; // Clear the div
+  let sanitizedData = document.createTextNode(data); // Create a text node which automatically escapes HTML
+  div.appendChild(sanitizedData); // Append the text node to the div
 }
