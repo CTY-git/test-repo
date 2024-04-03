@@ -105,7 +105,8 @@ function createColumn(detailedInformationArray, key) {
   span.classList.add(
     isSecure ? "secure-variant-tooltip-text" : "unsecure-variant-tooltip-text"
   );
-  span.innerHTML = isSecure ? variantTooltip.secure : variantTooltip.unsecure;
+  // Fix for CWE-79: Use textContent instead of innerHTML to prevent XSS
+  span.textContent = isSecure ? variantTooltip.secure : variantTooltip.unsecure;
 
   svgWithTooltip.appendChild(span);
   svgWithTooltip.appendChild(_getSvgElementForVariant(isSecure));
@@ -119,6 +120,7 @@ function createColumn(detailedInformationArray, key) {
   }
 
   return column;
+}
 }
 
 function appendNewColumn(vulnerableAppEndPointData, id) {
@@ -296,15 +298,14 @@ function _addingEventListenerToShowHideHelpButton(vulnerableAppEndPointData) {
         ]["AttackVectors"][index];
       let curlPayload = attackVector["CurlPayload"];
       let description = attackVector["Description"];
-      helpText =
-        helpText +
+      helpText +=
         "<li><b>Description about the attack:</b> " +
-        description +
+        escapeHTML(description) +
         "<br/><b>Payload:</b> " +
-        curlPayload +
+        escapeHTML(curlPayload) +
         "</li>";
     }
-    helpText = helpText + "</ol>";
+    helpText += "</ol>";
     document.getElementById("helpText").innerHTML = helpText;
     document.getElementById("hideHelp").disabled = false;
   });
@@ -312,6 +313,20 @@ function _addingEventListenerToShowHideHelpButton(vulnerableAppEndPointData) {
   document.getElementById("hideHelp").addEventListener("click", function () {
     _clearHelp();
   });
+
+  function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, function (tag) {
+      const charsToReplace = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      };
+      return charsToReplace[tag] || tag;
+    });
+  }
+}
 }
 
 /**
